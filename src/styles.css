@@ -506,6 +506,8 @@ select {
   letter-spacing: -0.015em;
   line-height: 1.2;
 }
+
+.status-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
