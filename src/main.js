@@ -1,20 +1,66 @@
 import { Conversation } from "@elevenlabs/client";
-import { VOICES } from "./voices.js";
+import { VOICES, findVoice } from "./voices.js";
 import "./styles.css";
 
-const AGENT_ID = "agent_2401kpdcfbczeznsr4bkmr97c7p1";
+const AGENT_ID = "agent_5701m2kp5fnhe9z95yqhzmf5105s";
 const BRANCH_ID =
   import.meta.env.VITE_BRANCH_ID === "false"
     ? ""
-    : (import.meta.env.VITE_BRANCH_ID ?? "agtbrch_7601kpdcfd0de3prknkcrzz1z04f");
+    : (import.meta.env.VITE_BRANCH_ID ?? "agtbrch_0101m2kp5gvme8a94x78vtqedj1v");
 
 const CONVAI_TOKEN_SOURCE = "js_sdk";
 const CONVAI_TOKEN_VERSION = "1.2.1";
-const PROMPT_STORAGE_KEY = "elevenlabs-voice-test:system-prompt-draft";
+
+/**
+ * Konfiguracja sesji niedostępna w UI.
+ * `llmModel` i `ttsModel` to wartości ustawione po stronie agenta — trzymamy je tu
+ * tylko jako dokumentację i nie wysyłamy w overrides (nadpisanie LLM wymaga
+ * osobnej zgody w ustawieniach bezpieczeństwa agenta).
+ */
+const SESSION_DEFAULTS = {
+  llmModel: "gpt-4o",
+  ttsModel: "eleven_flash_v2_5",
+  language: "pl",
+};
+
+const BASE_PROMPT = `# Zadanie
+Prowadzisz naturalną rozmowę głosową po polsku jako asystent ubezpieczeniowy. Pomagasz rozmówcy zrozumieć ofertę, odpowiadasz na pytania i dopytujesz o potrzeby.
+
+# Język i ton
+- Mów wyłącznie po polsku.
+- Odpowiadaj krótko i naturalnie, jak w rozmowie telefonicznej.
+- Zadawaj po jednym pytaniu i uważnie reaguj na odpowiedzi.
+- Zachowuj ciepły, spokojny i uprzejmy ton.
+
+# Zasady
+- Liczby, daty, godziny, kwoty, jednostki i symbole zapisuj słownie, aby synteza mowy brzmiała naturalnie.
+- Nie obiecuj warunków, których nie znasz — proponuj kontakt z konsultantem.
+- Unikaj tematów politycznych i wrażliwych; łagodnie wracaj do rozmowy o ubezpieczeniu.
+- Urozmaicaj sformułowania i nie powtarzaj tych samych zdań.`;
+
+/** Persona zależna od płci wybranego głosu — steruje imieniem i formą gramatyczną. */
+const PERSONAS = {
+  female: {
+    name: "Bianca",
+    withName: "z Biancą",
+    firstMessage:
+      "Dzień dobry, nazywam się Bianca. Jestem asystentką ubezpieczeniową — w czym mogę pomóc?",
+    identity: `# Tożsamość
+Nazywasz się Bianca i jesteś kobietą. Przedstawiaj się jako „Bianca”.
+O sobie mów zawsze w żeńskiej formie gramatycznej, na przykład: „powiedziałam”, „sprawdziłam”, „jestem gotowa”, „jestem asystentką”. Nigdy nie używaj o sobie form męskich.`,
+  },
+  male: {
+    name: "Bianek",
+    withName: "z Biankiem",
+    firstMessage:
+      "Dzień dobry, nazywam się Bianek. Jestem asystentem ubezpieczeniowym — w czym mogę pomóc?",
+    identity: `# Tożsamość
+Nazywasz się Bianek i jesteś mężczyzną. Przedstawiaj się jako „Bianek”.
+O sobie mów zawsze w męskiej formie gramatycznej, na przykład: „powiedziałem”, „sprawdziłem”, „jestem gotowy”, „jestem asystentem”. Nigdy nie używaj o sobie form żeńskich.`,
+  },
+};
 
 const voiceSelect = document.getElementById("voiceSelect");
-const systemPrompt = document.getElementById("systemPrompt");
-const resetPromptBtn = document.getElementById("resetPromptBtn");
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const connStatus = document.getElementById("connStatus");
@@ -33,27 +79,20 @@ for (const v of VOICES) {
 
 let conversation = null;
 
-const savedPrompt = localStorage.getItem(PROMPT_STORAGE_KEY);
-if (savedPrompt !== null) {
-  systemPrompt.value = savedPrompt;
+function personaForVoice(voiceId) {
+  return findVoice(voiceId)?.gender === "male" ? PERSONAS.male : PERSONAS.female;
 }
 
-systemPrompt.addEventListener("input", () => {
-  localStorage.setItem(PROMPT_STORAGE_KEY, systemPrompt.value);
-});
-
-resetPromptBtn.addEventListener("click", () => {
-  systemPrompt.value = systemPrompt.defaultValue;
-  localStorage.removeItem(PROMPT_STORAGE_KEY);
-});
-
 function buildOverrides(voiceId) {
-  const overrides = { tts: { voiceId } };
-  const promptText = systemPrompt.value.trim();
-  if (promptText) {
-    overrides.agent = { prompt: { prompt: promptText } };
-  }
-  return overrides;
+  const persona = personaForVoice(voiceId);
+  return {
+    tts: { voiceId },
+    agent: {
+      prompt: { prompt: `${persona.identity}\n\n${BASE_PROMPT}` },
+      firstMessage: persona.firstMessage,
+      language: SESSION_DEFAULTS.language,
+    },
+  };
 }
 
 function showError(msg) {
@@ -68,16 +107,16 @@ function showError(msg) {
 
 function parseTokenResponse(text, httpStatus) {
   if (!text) {
-    throw new Error(`Token HTTP ${httpStatus}`);
+    throw new Error(`Błąd tokenu HTTP ${httpStatus}`);
   }
   let data;
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(text.slice(0, 200) || `Token HTTP ${httpStatus}`);
+    throw new Error(text.slice(0, 200) || `Błąd tokenu HTTP ${httpStatus}`);
   }
   if (!data.token) {
-    throw new Error("API response is missing the token field");
+    throw new Error("W odpowiedzi API brakuje tokenu");
   }
   return data.token;
 }
@@ -93,7 +132,7 @@ async function fetchConversationTokenFromDevServer() {
     } catch {
       /* raw text */
     }
-    throw new Error(detail || `Token HTTP ${res.status}`);
+    throw new Error(detail || `Błąd tokenu HTTP ${res.status}`);
   }
   return parseTokenResponse(text, res.status);
 }
@@ -117,7 +156,7 @@ async function fetchConversationTokenFromBrowser() {
     } catch {
       /* raw text */
     }
-    throw new Error(detail || `Token HTTP ${res.status}`);
+    throw new Error(detail || `Błąd tokenu HTTP ${res.status}`);
   }
   return parseTokenResponse(text, res.status);
 }
@@ -129,21 +168,17 @@ function isGitHubPagesHost() {
 function buildCallbacks() {
   return {
     onConnect: () => {
-      connStatus.textContent = "Connected";
+      connStatus.textContent = "Połączono";
       stopBtn.disabled = false;
       voiceSelect.disabled = true;
-      systemPrompt.disabled = true;
-      resetPromptBtn.disabled = true;
       setCallUi("active");
     },
     onDisconnect: () => {
-      connStatus.textContent = "Disconnected";
+      connStatus.textContent = "Rozłączono";
       startBtn.disabled = false;
       stopBtn.disabled = true;
       modeStatus.textContent = "—";
       voiceSelect.disabled = false;
-      systemPrompt.disabled = false;
-      resetPromptBtn.disabled = false;
       conversation = null;
       setCallUi("idle");
     },
@@ -152,10 +187,12 @@ function buildCallbacks() {
       showError(typeof err === "string" ? err : err?.message || String(err));
     },
     onModeChange: ({ mode }) => {
-      modeStatus.textContent = mode === "speaking" ? "Speaking" : "Listening";
+      modeStatus.textContent = mode === "speaking" ? "Mówi" : "Słucha";
       if (callSurface?.dataset.state === "active" && modeLine) {
         modeLine.textContent =
-          mode === "speaking" ? "Agent is speaking — wait for your turn." : "Listening — go ahead and talk.";
+          mode === "speaking"
+            ? "Asystent mówi — za chwilę będzie Twoja kolej."
+            : "Słucham — możesz mówić.";
       }
     },
   };
@@ -163,17 +200,18 @@ function buildCallbacks() {
 
 function setCallUi(state) {
   if (!callSurface) return;
+  const persona = personaForVoice(voiceSelect.value);
   callSurface.dataset.state = state;
   if (!callLabel || !modeLine) return;
   if (state === "idle") {
-    callLabel.textContent = "Ready to connect";
-    modeLine.textContent = "Microphone access is requested when you start.";
+    callLabel.textContent = "Gotowy do połączenia";
+    modeLine.textContent = `Rozmowa ${persona.withName}. Po rozpoczęciu poprosimy o dostęp do mikrofonu.`;
   } else if (state === "connecting") {
-    callLabel.textContent = "Connecting…";
-    modeLine.textContent = "Grant microphone access if the browser asks.";
+    callLabel.textContent = "Łączenie…";
+    modeLine.textContent = "Zezwól na dostęp do mikrofonu, jeśli przeglądarka o to poprosi.";
   } else if (state === "active") {
-    callLabel.textContent = "Live session";
-    modeLine.textContent = "Speak naturally — the agent follows the system prompt on the left.";
+    callLabel.textContent = "Rozmowa trwa";
+    modeLine.textContent = `Mów swobodnie — rozmawiasz ${persona.withName}.`;
   }
 }
 
@@ -252,5 +290,13 @@ async function stopConversation() {
   }
 }
 
+voiceSelect.addEventListener("change", () => {
+  if (callSurface?.dataset.state === "idle") {
+    setCallUi("idle");
+  }
+});
+
 startBtn.addEventListener("click", startConversation);
 stopBtn.addEventListener("click", stopConversation);
+
+setCallUi("idle");
