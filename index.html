@@ -5,61 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Przetestuj naturalną rozmowę z polskim asystentem głosowym."
+      content="Wybierz głos Bianci i sprawdź, jak brzmi w rozmowie."
     />
-    <title>Studio rozmowy głosowej</title>
+    <title>Bianca — tester głosów</title>
     <meta name="theme-color" content="#f7f5f2" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
+    />
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar">
-        <a class="brand" href="#" aria-label="Studio Głosu — strona główna">
-          <span class="brand-mark" aria-hidden="true">S</span>
-          <span class="brand-text">
-            <strong>Studio Głosu</strong>
-            <small>Asystent konwersacyjny</small>
-          </span>
-        </a>
-
-        <nav class="side-nav" aria-label="Główna nawigacja">
-          <a class="nav-item is-active" href="#rozmowa" aria-current="page">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 10h8M8 14h5M5 19l1.2-3.1A7 7 0 1 1 19 12a7 7 0 0 1-10.5 6.1L5 19Z" />
-            </svg>
-            Rozmowa
-          </a>
-          <a class="nav-item" href="#glos">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM19 13.4v-2.8l-2-.7-.5-1.1.9-1.9-2-2-1.9.9-1.1-.5-.7-2H9l-.7 2-1.1.5-1.9-.9-2 2 .9 1.9-.5 1.1-2 .7v2.8l2 .7.5 1.1-.9 1.9 2 2 1.9-.9 1.1.5.7 2h2.8l.7-2 1.1-.5 1.9.9 2-2-.9-1.9.5-1.1 1.9-.7Z" />
-            </svg>
-            Głos
-          </a>
-        </nav>
-
-        <div class="privacy-note">
-          <span class="privacy-icon" aria-hidden="true">✓</span>
-          <div>
-            <strong>Prywatna sesja</strong>
-            <p>Treść rozmowy nie jest wyświetlana na tej stronie.</p>
-          </div>
-        </div>
-      </aside>
-
       <main class="main-content" id="rozmowa">
         <header class="hero">
-          <span class="eyebrow">Rozmowa głosowa</span>
-          <h1>Zacznijmy naturalną rozmowę</h1>
-          <p>
-            Wybierz głos i rozpocznij bezpośrednią sesję przez mikrofon.
-          </p>
+          <h1>Tester głosów Bianci</h1>
+          <p>Wybierz głos, zacznij rozmowę i posłuchaj, jak brzmi.</p>
         </header>
 
         <div class="workspace">
           <section class="card conversation-card" aria-labelledby="call-heading">
             <div class="section-heading">
               <div>
-                <span class="step-number">01</span>
-                <h2 id="call-heading">Połącz się z asystentem</h2>
+                <h2 id="call-heading">Rozmowa</h2>
               </div>
               <span class="status-pill">
                 <span class="status-dot" aria-hidden="true"></span>
@@ -79,17 +48,17 @@
                   </svg>
                 </div>
               </div>
-              <p class="call-label" id="callLabel">Gotowy do połączenia</p>
+              <p class="call-label" id="callLabel">Gotowy</p>
               <p class="call-sub" id="modeLine">
-                Po rozpoczęciu poprosimy o dostęp do mikrofonu.
+                Na start przeglądarka poprosi o mikrofon.
               </p>
               <div class="call-actions">
                 <button type="button" id="startBtn" class="btn btn-primary">
                   <span class="btn-icon" aria-hidden="true"></span>
-                  Rozpocznij rozmowę
+                  Zacznij
                 </button>
                 <button type="button" id="stopBtn" class="btn btn-ghost" disabled>
-                  Zakończ rozmowę
+                  Zakończ
                 </button>
               </div>
             </div>
@@ -111,24 +80,17 @@
             <section class="card voice-card" aria-labelledby="voice-heading">
               <div class="section-heading compact">
                 <div>
-                  <span class="step-number">02</span>
-                  <h2 id="voice-heading">Wybierz głos</h2>
+                  <h2 id="voice-heading">Głos</h2>
                 </div>
               </div>
-              <p class="field-hint">
-                Głos można zmienić przed rozpoczęciem sesji.
-              </p>
+              <p class="field-hint">Głos zmienisz przed rozmową.</p>
               <label class="select-wrap">
-                <span>Głos asystenta</span>
+                <span>Głos</span>
                 <select id="voiceSelect" class="select"></select>
               </label>
             </section>
           </aside>
         </div>
-
-        <footer class="page-footer">
-          <span>Technologia syntezy mowy: ElevenLabs</span>
-        </footer>
       </main>
     </div>
     <script type="module" src="/src/main.js"></script>

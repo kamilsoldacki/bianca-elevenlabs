@@ -190,9 +190,7 @@ function buildCallbacks() {
       modeStatus.textContent = mode === "speaking" ? "Mówi" : "Słucha";
       if (callSurface?.dataset.state === "active" && modeLine) {
         modeLine.textContent =
-          mode === "speaking"
-            ? "Asystent mówi — za chwilę będzie Twoja kolej."
-            : "Słucham — możesz mówić.";
+          mode === "speaking" ? "Głos mówi." : "Możesz mówić.";
       }
     },
   };
@@ -204,14 +202,14 @@ function setCallUi(state) {
   callSurface.dataset.state = state;
   if (!callLabel || !modeLine) return;
   if (state === "idle") {
-    callLabel.textContent = "Gotowy do połączenia";
-    modeLine.textContent = `Rozmowa ${persona.withName}. Po rozpoczęciu poprosimy o dostęp do mikrofonu.`;
+    callLabel.textContent = "Gotowy";
+    modeLine.textContent = `Wybrany głos: ${persona.name}. Na start poprosimy o mikrofon.`;
   } else if (state === "connecting") {
     callLabel.textContent = "Łączenie…";
-    modeLine.textContent = "Zezwól na dostęp do mikrofonu, jeśli przeglądarka o to poprosi.";
+    modeLine.textContent = "Zezwól na mikrofon, jeśli przeglądarka o to poprosi.";
   } else if (state === "active") {
-    callLabel.textContent = "Rozmowa trwa";
-    modeLine.textContent = `Mów swobodnie — rozmawiasz ${persona.withName}.`;
+    callLabel.textContent = "Test trwa";
+    modeLine.textContent = `Słuchasz głosu: ${persona.name}.`;
   }
 }
 
