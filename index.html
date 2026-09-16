@@ -20,11 +20,6 @@
     <div class="app-shell">
       <main class="main-content" id="rozmowa">
         <div class="workspace">
-          <header class="hero">
-            <h1>Tester głosów Bianci</h1>
-            <p>Wybierz głos, zacznij rozmowę i posłuchaj, jak brzmi.</p>
-          </header>
-
           <section class="card conversation-card" aria-labelledby="call-heading">
             <div class="section-heading">
               <div>
@@ -77,17 +72,8 @@
           </section>
 
           <aside class="settings-column" id="glos" aria-label="Wybór głosu">
-            <section class="card voice-card" aria-labelledby="voice-heading">
-              <div class="section-heading compact">
-                <div>
-                  <h2 id="voice-heading">Głos</h2>
-                </div>
-              </div>
-              <p class="field-hint">Głos zmienisz przed rozmową.</p>
-              <label class="select-wrap">
-                <span>Głos</span>
-                <select id="voiceSelect" class="select"></select>
-              </label>
+            <section class="card voice-card" aria-label="Wybór głosu">
+              <select id="voiceSelect" class="select" aria-label="Wybór głosu"></select>
             </section>
           </aside>
         </div>
